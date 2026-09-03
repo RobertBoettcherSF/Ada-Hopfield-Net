@@ -45,7 +45,7 @@ package body Hopfield_Network is
    function Train_Discrete (Patterns : Discrete_Pattern_Matrix) return Weight_Matrix is
       Num_Nodes : constant Float := Float (Patterns'Length (2));
       W         : Weight_Matrix (Patterns'Range (2), Patterns'Range (2)) := 
-                    (others => (others => 0.0));
+                    [others => [others => 0.0]];
    begin
       for P in Patterns'Range (1) loop
          for I in Patterns'Range (2) loop
@@ -120,7 +120,7 @@ package body Hopfield_Network is
    function Train_Continuous (Patterns : Continuous_Pattern_Matrix) return Weight_Matrix is
       Num_Nodes : constant Float := Float (Patterns'Length (2));
       W         : Weight_Matrix (Patterns'Range (2), Patterns'Range (2)) := 
-                    (others => (others => 0.0));
+                    [others => [others => 0.0]];
    begin
       for P in Patterns'Range (1) loop
          for I in Patterns'Range (2) loop
