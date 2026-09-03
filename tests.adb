@@ -25,11 +25,11 @@ procedure Tests is
 
    -- Common fixtures
    Pattern_3 : constant Discrete_Pattern_Matrix (1 .. 1, 1 .. 3) :=
-     (1 => (1, 1, -1));
+     [1 => [1, 1, -1]];
    Weights_3 : Weight_Matrix (1 .. 3, 1 .. 3);
    
    Pattern_C_3 : constant Continuous_Pattern_Matrix (1 .. 1, 1 .. 3) :=
-     (1 => (1.0, 1.0, -1.0));
+     [1 => [1.0, 1.0, -1.0]];
    Weights_C_3 : Weight_Matrix (1 .. 3, 1 .. 3);
    
    State_3 : Discrete_Vector (1 .. 3);
@@ -40,9 +40,9 @@ procedure Tests is
 begin
    -- TEST 1 — Validation Helpers
    Put_Line ("TEST 1 — Validation Helpers");
-   Check ("1.1 Valid bipolar vector", Is_Valid_Bipolar ((1, -1, 1)));
-   Check ("1.2 Invalid bipolar vector (contains 0)", not Is_Valid_Bipolar ((1, 0, -1)));
-   Check ("1.3 Is_Square matrix", Is_Square (((1.0, 0.0), (0.0, 1.0))));
+   Check ("1.1 Valid bipolar vector", Is_Valid_Bipolar ([1, -1, 1]));
+   Check ("1.2 Invalid bipolar vector (contains 0)", not Is_Valid_Bipolar ([1, 0, -1]));
+   Check ("1.3 Is_Square matrix", Is_Square ([[1.0, 0.0], [0.0, 1.0]]));
 
    -- TEST 2 — Train Discrete Pattern
    Put_Line ("TEST 2 — Train Discrete Pattern");
@@ -53,16 +53,16 @@ begin
 
    -- TEST 3 — Discrete Energy Computation
    Put_Line ("TEST 3 — Discrete Energy Computation");
-   State_3 := (1, 1, -1); -- Stable state
+   State_3 := [1, 1, -1]; -- Stable state
    Check ("3.1 Energy of stable state", Approx_Equal (Energy_Discrete (Weights_3, State_3), -1.0));
-   State_3 := (-1, -1, 1); -- Inverted stable state
+   State_3 := [-1, -1, 1]; -- Inverted stable state
    Check ("3.2 Energy of inverted stable state", Approx_Equal (Energy_Discrete (Weights_3, State_3), -1.0));
-   State_3 := (1, -1, 1); -- Unstable state
+   State_3 := [1, -1, 1]; -- Unstable state
    Check ("3.3 Energy of unstable state is higher", Energy_Discrete (Weights_3, State_3) > -1.0);
 
    -- TEST 4 — Update Discrete Asynchronous
    Put_Line ("TEST 4 — Update Discrete Asynchronous");
-   State_3 := (1, -1, -1); -- One error at node 2
+   State_3 := [1, -1, -1]; -- One error at node 2
    Update_Discrete_Asynchronous (Weights_3, State_3, 2);
    Check ("4.1 Node 2 flipped to 1", State_3 (2) = 1);
    Update_Discrete_Asynchronous (Weights_3, State_3, 3);
@@ -72,7 +72,7 @@ begin
 
    -- TEST 5 — Update Discrete Synchronous
    Put_Line ("TEST 5 — Update Discrete Synchronous");
-   State_3 := (-1, 1, 1); -- Completely corrupted state
+   State_3 := [-1, 1, 1]; -- Completely corrupted state
    Update_Discrete_Synchronous (Weights_3, State_3);
    Check ("5.1 Sync recovers Node 1 to 1", State_3 (1) = 1);
    Check ("5.2 Sync recovers Node 2 to -1", State_3 (2) = -1); -- Wait, sum for 2 is -2/3. Node 2 becomes -1.
@@ -83,8 +83,8 @@ begin
    Put_Line ("TEST 6 — Discrete Multi-Pattern Training");
    declare
       Multi_Pats : constant Discrete_Pattern_Matrix (1 .. 2, 1 .. 4) :=
-        (1 => (1, 1, 1, 1),
-         2 => (1, -1, 1, -1));
+        [1 => [1, 1, 1, 1],
+         2 => [1, -1, 1, -1]];
       W_Multi : constant Weight_Matrix := Train_Discrete (Multi_Pats);
    begin
       -- For W_12: (1*1 + 1*-1) / 4 = 0.0
@@ -105,7 +105,7 @@ begin
    -- TEST 8 — Continuous Update Dynamics (Step 1)
    Put_Line ("TEST 8 — Continuous Update Dynamics (Step 1)");
    -- Init nodes to zero state
-   for I in 1 .. 3 loop
+   for I in State_C'Range loop
       State_C (I) := (U => 0.0, V => 0.0);
    end loop;
    Update_Continuous_Synchronous (Weights_C_3, State_C, 0.1);
@@ -146,9 +146,9 @@ begin
    -- TEST 11 — Edge Case 1-Node Network
    Put_Line ("TEST 11 — Edge Case 1-Node Network");
    declare
-      Pat_1   : constant Discrete_Pattern_Matrix (1 .. 1, 1 .. 1) := (1 => (1 => 1));
+      Pat_1   : constant Discrete_Pattern_Matrix (1 .. 1, 1 .. 1) := [1 => [1 => 1]];
       W_1     : constant Weight_Matrix := Train_Discrete (Pat_1);
-      State_1 : Discrete_Vector (1 .. 1) := (1 => 1);
+      State_1 : Discrete_Vector (1 .. 1) := [1 => 1];
    begin
       Check ("11.1 1-Node Weight is 0", Approx_Equal (W_1 (1, 1), 0.0));
       Update_Discrete_Synchronous (W_1, State_1);
@@ -160,8 +160,8 @@ begin
    Put_Line ("TEST 12 — Precondition Violation (Dimension Mismatch)");
    Exception_Caught := False;
    declare
-      Bad_Weights : constant Weight_Matrix (1 .. 2, 1 .. 2) := (others => (others => 0.0));
-      Bad_State   : Discrete_Vector (1 .. 3) := (1, 1, 1);
+      Bad_Weights : constant Weight_Matrix (1 .. 2, 1 .. 2) := [others => [others => 0.0]];
+      Bad_State   : Discrete_Vector (1 .. 3) := [1, 1, 1];
    begin
       Update_Discrete_Synchronous (Bad_Weights, Bad_State);
       Check ("12.1 Mismatch should have raised Assert_Failure", False);
@@ -179,7 +179,7 @@ begin
    Put_Line ("TEST 13 — Precondition Violation (Invalid Pattern)");
    Exception_Caught := False;
    declare
-      Bad_Pat : constant Discrete_Pattern_Matrix (1 .. 1, 1 .. 2) := (1 => (1, 0)); -- 0 is invalid
+      Bad_Pat : constant Discrete_Pattern_Matrix (1 .. 1, 1 .. 2) := [1 => [1, 0]]; -- 0 is invalid
       Bad_W   : Weight_Matrix (1 .. 2, 1 .. 2);
    begin
       Bad_W := Train_Discrete (Bad_Pat);
